@@ -1,6 +1,7 @@
 var animate = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function (callback) {
   window.setTimeout(callback, 1000 / 60)
 }
+
 var canvas = document.getElementById('pong-table')
 var width = 1000
 var height = 500
@@ -130,41 +131,76 @@ Ball.prototype.render = function () {
   context.stroke()
 }
 
-
-
 Ball.prototype.update = function () {
-  // TODO Implement ball movement
-  // *** Collision Detection ***// 
- var xLeftPaddle = player.paddle.x + player.paddle.width/2;
- var xRightPaddle = computer.paddle.x - computer.paddle.width/2;
- var yLeftPaddleTop = player.paddle.y - player.paddle.height/2;
- var yLeftPaddleBottom = player.paddle.y + player.paddle.height/2;
- var yRightPaddleTop = computer.paddle.y - computer.paddle.height/2;
- var yRightPaddleBottom = computer.paddle.y + computer.paddle.height/2;
- 
- var rightXBall = this.x + this.radius;
- var leftXBall= this.x - this.radius;
- 
-  if((this.x + this.radius > canvas.width)){
-        //collision paddle add to score
+  
+  //if paddle goes out of x bounds of canvas
+  
+ if(this.x + this.radius > canvas.width){
+       player.paddle.score += 1;
      }
   else if (this.x - this.radius < 0) {
-    //collision paddle add to score
-  }
-  else if(this.y + this.radius){
-     this.y = (-this.y);
+    computer.paddle.score += 1;
+  } 
+  
+  //if paddle goes out of y bounds for canvas
+  else if(this.y + this.radius > canvas.height){
+     this.yspeed = (-this.yspeed);
      this.y = canvas.height-this.radius;
   }
 
-  else if (this.y - this.radius == ){
+  else if (this.y - this.radius < 0){
      this.yspeed = (-this.yspeed);
      this.y = this.radius;
   }
+};
 
-if(/*ball hits paddle*/){
-    this.xspeed = (-this.xspeed);
-    
-}
+if (this.x <= player.paddle.x + player.paddle.width/2) {
+
+    //in case of issues with the ball moving small px in a given frame
+    var tolerance = 2;
+
+    // Detect if ball hits front of paddle
+    // y collision should be from 1/2 the ball width above the paddle's edge
+    // to 1/2 the ball width below the paddle's edge
+    if (this.x + tolerance >= player.paddle.x + player.paddle.width/2 
+            && this.y - this.radius >= player.paddle.y
+            && this.y + this.radius <= player.paddle.y + player.paddle.height/2) {
+        this.xspeed = -this.xspeed;
+
+  
+    } else if (this.y - this.radius >= player.paddle.y
+            && this.y <= player.paddle.y
+            && this.x - this.radius >= player.paddle.x) {
+
+        // Get the position of the center of the ball
+        var x = this.x + this.radius;
+        var y = this.y + this.radius;
+
+        // Get the position of the corner of the paddle
+        var px = player.paddle.x + player.paddle.width/2;
+        var py = player.paddle.y;
+        if (this.y + this.radius > player.paddle.y) {
+            // if the ball is below the top edge, use the bottom corner
+            // of the paddle - else use the top corner of the paddle
+            py += player.paddle.height/2;
+        }
+        
+
+        // Do some trig to determine if the ball surface touched the paddle edge
+        // Calc the distance (C = sqrt(A^2 + B^2))
+        var dist = Math.pow(Math.pow(x - px, 2) + Math.pow(y - py, 2), 0.5);
+
+        // Check if the distance is within the padding zone
+        if (dist <= this.radius && dist >= this.radius - tolerance) {
+            // Get the angle of contact as Arc-sin of dx/dy
+            var angle = Math.asin(x - px / y - py);
+
+            // Adjust the velocity accordingly
+            this.vy = (-this.yspeed * Math.cos(angle)) + (-this.xspeed * Math.sin(angle));
+            this.vx = (-this.xspeed * Math.cos(angle)) + (-this.yspeed * Math.sin(angle));
+        }
+
+    }
 }
 
 // *** NET ***
@@ -193,4 +229,4 @@ window.addEventListener('keydown', function (event) {
 
 window.addEventListener('keyup', function (event) {
   delete pressedKeys[event.keyCode]
-})
+});
