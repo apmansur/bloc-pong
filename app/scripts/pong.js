@@ -1,22 +1,4 @@
-Skip to content
-This repository
-Search
-Pull requests
-Issues
-Marketplace
-Explore
- @apmansur
- Sign out
- Unwatch 1
-  Star 0
-  Fork 0 apmansur/bloc-pong
- Code  Issues 0  Pull requests 0  Projects 0  Wiki  Settings Insights 
-Branch: checkpoint-5 Find file Copy pathbloc-pong/app/scripts/pong.js
-3c6ff5d  22 minutes ago
-@apmansur apmansur add computer ai
-1 contributor
-RawBlameHistory     
-312 lines (253 sloc)  6.68 KB
+
 //*** Global Variables ***
 
 var animate = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function (callback) {
@@ -40,30 +22,20 @@ var random = function(diff) {
 };
 
 var endMessage = function(winner){
-  context.font = "4em Verdana";
-   context.fillStyle = "green";
-  context.textAlign = "center";
-   context.fillText((winner + "has won the game!") , 500, 250); 
+    alert(winner + " has won the game!");
+    gameReset();
+    
 };
 
-var endGame = function(player, computer){
-  if (player.paddle.score == 11 ){
-    endMessage("Player 1");
-    step();
-  }
-   else if (computer.paddle.score == 1){
-     if (computer.paddle.twoPlayer === false){
-       endMessage("Computer");
-       step();
-       console.log("hello");
-     }
-     else{
-       endMessage("Player 2");
-     }
-  
-   }
-};
+var gameReset = function(){
+    computer.paddle.reset();
+    player.paddle.reset();
+    ball.reset();
+}
 
+Paddle.prototype.reset = function(){
+    this.score = 0;
+}
 
 
 //*** Render Game ***
@@ -79,17 +51,16 @@ var render = function () {
 };
 
 var update = function () {
-  endGame(player, computer);
   player.update();
   computer.update();
-  
   ball.update();
   
 };
 
 var step = function () {
   update();
-  render();
+  render(); 
+  endGame(player, computer);
   animate(step);
 };
 
@@ -247,6 +218,24 @@ Ball.prototype.reset = function (){
 };
 
 
+
+
+var endGame = function(player, computer){
+  if (player.paddle.score == 11 ){
+    endMessage("Player 1")
+  }
+   else if (computer.paddle.score == 11){
+     if (computer.paddle.twoPlayer === false){
+       endMessage("Computer");
+     }
+     else{
+       endMessage("Player 2");
+     }
+  
+   }
+};
+
+
 //*** Collison ***
 
 Ball.prototype.update = function () {
@@ -261,12 +250,12 @@ Ball.prototype.update = function () {
   //if paddle goes out of x bounds of canvas
  if(rightBall > canvas.width){
        player.paddle.score += 1;
-       this.reset();
+       this.reset(); 
        
      }
   else if (leftBall < 0) {
     computer.paddle.score += 1;
-    console.log(computer.paddle.score);
+    endGame(player, computer);
     this.reset();
   } 
   
